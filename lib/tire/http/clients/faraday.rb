@@ -18,6 +18,8 @@ require 'faraday'
 #       Tire::HTTP::Client::Faraday.faraday_middleware = Proc.new do |builder|
 #         builder.adapter :typhoeus
 #       end
+#
+#       Tire::HTTP::Client::Faraday.faraday_options = {request: {timeout: 5}}
 #     
 #       config.client(Tire::HTTP::Client::Faraday)
 #     
@@ -37,6 +39,9 @@ module Tire
         class << self
           # A customized stack of Faraday middleware that will be used to make each request.
           attr_accessor :faraday_middleware
+
+          # Options to be applied for each request.
+          attr_accessor :faraday_options
 
           def get(url, data = nil)
             request(:get, url, data)
@@ -60,7 +65,7 @@ module Tire
 
           private
           def request(method, url, data = nil)
-            conn = ::Faraday.new( &(faraday_middleware || DEFAULT_MIDDLEWARE) )
+            conn = ::Faraday.new(nil, faraday_options, &(faraday_middleware || DEFAULT_MIDDLEWARE))
             response = conn.run_request(method, url, data, nil)
             Response.new(response.body, response.status, response.headers)
           end
